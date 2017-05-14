@@ -17,8 +17,10 @@
 
 
 import time
-
-from Feedback import Feedback
+import sys
+sys.path.append("../FeedbackBase")# cannot find Feedback directly
+from FeedbackBase.Feedback import Feedback
+#from Feedback import Feedback
 
 
 class EventDrivenFeedback(Feedback):

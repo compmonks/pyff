@@ -20,6 +20,7 @@
 
 import logging
 import sys
+sys.path.append("../")
 from xml.dom import minidom, Node
 import json
 
@@ -44,13 +45,16 @@ VARIABLE = 1
 TRUE_VALUE = ("True", "true", "1")
 FALSE_VALUE = ("False", "false", "0")
 
-BOOLEAN_TYPE = ("b", "bool", "boolean")
+#BOOLEAN_TYPE = ("b", "bool", "boolean")
+BOOLEAN_TYPE = ("bool", "boolean")
 INTEGER_TYPE = ("i", "int", "integer")
 FLOAT_TYPE = ("f", "float")
 LONG_TYPE = ("l", "long")
 COMPLEX_TYPE = ("c", "cmplx", "complex")
 STRING_TYPE = ("s", "str", "string")
+BYTES_TYPE = ("b", "bytes")
 UNICODE_TYPE = ('u', 'unicode')
+#UNICODE_TYPE = ('s','str','string')
 LIST_TYPE = ("list",)
 TUPLE_TYPE = ("tuple",)
 SET_TYPE = ("set",)
@@ -60,7 +64,7 @@ NONE_TYPE = ("none",)
 UNSUPPORTED_TYPE = ("unsupported",)
 COMMAND_TYPE = ("command",)
 
-CMD_GET_FEEDBACKS = "getfeedbacks"        # tell the fc to send the list of available feedbacks
+CMD_GET_FEEDBACKS = "getfeedbacks"    # tell the fc to send the list of available feedbacks
 CMD_PLAY = 'play'
 CMD_PAUSE = 'pause'
 CMD_STOP = 'stop'
@@ -104,10 +108,11 @@ class XmlDecoder(object):
         try:
             dom = minidom.parseString(packet)
         except:
-            raise DecodingError("Not XML at all! (%s)" % unicode(packet))
+            #raise DecodingError("Not XML at all! (%s)" % unicode(packet))
+            raise DecodingError("Not XML at all! (%s)" % str(packet))
         root = dom.documentElement
-        l = []    # for the variables
-        c = []    # for the commands
+        l = []  # for the variables
+        c = []  # for the commands
         t = None  # for the type
         for node in root.childNodes:
             if node.nodeType == Node.ELEMENT_NODE:
@@ -122,7 +127,8 @@ class XmlDecoder(object):
                         if type == VARIABLE:
                             l.append(value)
                         elif type == COMMAND:
-                            c.append(value)
+                            #c.append(value)
+                            c.append(list(value))
                         else:
                             raise DecodingError("Unknown type (%s)" % str(type))
         return BciSignal(dict(l), c, t)
@@ -132,6 +138,8 @@ class XmlDecoder(object):
         """Parse the element and return a dictionary with the data."""
 
         type = element.nodeName
+        #print("ERR elem: %s"%(element))
+        #print("ERR type: %s"%(type))
         name = self.__get(element, NAME)
         value = self.__get(element, VALUE)
 
@@ -144,10 +152,13 @@ class XmlDecoder(object):
                 raise DecodingError("Unknown boolean value: %s" % str(value))
         elif type in INTEGER_TYPE:
             return VARIABLE, (name, int(value))
+        elif type in BYTES_TYPE:
+            return VARIABLE, (name, bytes(value))
         elif type in FLOAT_TYPE:
             return VARIABLE, (name, float(value))
         elif type in LONG_TYPE:
-            return VARIABLE, (name, long(value))
+            #return VARIABLE, (name, long(value))
+            return VARIABLE, (name, int(value))
         elif type in COMPLEX_TYPE:
             if value.startswith("(") and value.endswith(")"):
                 value = value[1:-1]
@@ -155,7 +166,8 @@ class XmlDecoder(object):
         elif type in STRING_TYPE:
             return VARIABLE, (name, str(value))
         elif type in UNICODE_TYPE:
-            return VARIABLE, (name, unicode(value))
+            #return VARIABLE, (name, unicode(value))
+            return VARIABLE, (name, str(value))
         elif type in LIST_TYPE:
             l = list()
             for node in element.childNodes:
@@ -247,8 +259,8 @@ class TobiXmlDecoder(XmlDecoder):
         return XmlDecoder.decode_packet(self, packet)
 
     def __decode_tobiic_packet(self, data):
-        l = []    # for the variables
-        c = []    # for the commands
+        l = []  # for the variables
+        c = []  # for the commands
         t = None  # for the type
 
         # deserialize the packet
@@ -260,12 +272,12 @@ class TobiXmlDecoder(XmlDecoder):
         # go through all the classifiers...
         for classifier_name in icmessage.classifiers.map.keys():
             classifier_data = icmessage.classifiers.map[classifier_name]
-            print "[TOBI-IC] %s" % classifier_name
+            print("[TOBI-IC] %s" % classifier_name)
             # and all the classes inside the classifier...
             values = []
             for class_name in classifier_data.classes.map.keys():
                 class_data = classifier_data.classes.map[class_name]
-                print "[TOBI-IC] %s/%s: %.3f" % (classifier_name, class_name, class_data.GetValue())
+                print("[TOBI-IC] %s/%s: %.3f" % (classifier_name, class_name, class_data.GetValue()))
                 # is this the correct way to pass the data value on to pyff??
                 values.append(class_data.GetValue())
             l.append((u'cl_output', values))
@@ -322,7 +334,7 @@ class XmlEncoder(object):
         for d in signal.data:
             try:
                 self.__write_element(d, signal.data[d], dom, root2)
-            except EncodingError, e:
+            except EncodingError as e:
                 # Ignore elements which are unkknown, just print a warning
                 self.logger.warning("Unable to write element (%s)" % str(e))
         return dom.toxml('utf-8')
@@ -335,18 +347,20 @@ class XmlEncoder(object):
             type = INTEGER_TYPE
         elif isinstance(value, float):
             type = FLOAT_TYPE
-        elif isinstance(value, long):
-            type = LONG_TYPE
+        #elif isinstance(value, long):
+        #   type = LONG_TYPE
         elif isinstance(value, complex):
             type = COMPLEX_TYPE
         elif isinstance(value, str):
             type = STRING_TYPE
-        elif isinstance(value, unicode):
-            type = UNICODE_TYPE
+        #elif isinstance(value, unicode):
+        #   type = UNICODE_TYPE
         elif isinstance(value, list):
             type = LIST_TYPE
         elif isinstance(value, tuple):
             type = TUPLE_TYPE
+        elif isinstance(value, bytes):
+            type = BYTES_TYPE
         elif isinstance(value, set):
             type = SET_TYPE
         elif isinstance(value, frozenset):
@@ -381,7 +395,8 @@ class XmlEncoder(object):
                 if self.__get_type(i[1]) != UNSUPPORTED_TYPE:
                     self.__write_element(None, i, dom, e)
         elif value != None:
-            e.setAttribute(VALUE, unicode(value))
+            #e.setAttribute(VALUE, unicode(value))
+            e.setAttribute(VALUE, str(value))
         root.appendChild(e)
 
 
@@ -493,7 +508,7 @@ class BciSignal(object):
 
     """
 
-    def __init__(self, data, commands, type):
+    def __init__(self, data, commands, typee):
         """
         Initialize a BciSignal object.
 
@@ -510,7 +525,7 @@ class BciSignal(object):
         if not commands:
             commands = []
         # TODO: check if data, commadns, and type are valid
-        self.type = type
+        self.type = typee
         self.data = data
         self.commands = commands
 
@@ -538,17 +553,17 @@ class DecodingError(Error):
 
 
 def main():
-#    if len(sys.argv) < 2:
-#        print 'usage: %s infile.xml' % sys.argv[0]
-#        sys.exit(-1)
+#   if len(sys.argv) < 2:
+#      print 'usage: %s infile.xml' % sys.argv[0]
+#      sys.exit(-1)
 #
-#    file = open(sys.argv[1], "r")
-#    packet = file.read()
-#    file.close()
-#    print packet
-#    xmldec = XmlDecoder()
+#   file = open(sys.argv[1], "r")
+#   packet = file.read()
+#   file.close()
+#   print packet
+#   xmldec = XmlDecoder()
 #
-#    type, data = xmldec.decode_packet(packet)
+#   type, data = xmldec.decode_packet(packet)
 
     d = {"boolean" : True,
          "integer" : 1,
@@ -573,25 +588,25 @@ def main():
 
     encoder = XmlEncoder()
     xml = encoder.encode_packet(signal)
-    print xml
+    print(xml)
 
     decoder = XmlDecoder()
     signal2 = decoder.decode_packet(xml)
     d2 = signal2.data
 
-    print "*** Elements of the original dictionary:"
+    print("*** Elements of the original dictionary:")
     for i in d.items():
-        print i
+        print(i)
 
-    print "*** Elements of the second dictionary:"
+    print("*** Elements of the second dictionary:")
     for i in d2.items():
-        print i
+        print(i)
 
-    print d == d2
-    print signal
-    print signal2
+    print(d == d2)
+    print(signal)
+    print(signal2)
 
-    print '***'
+    print('***')
 
     # the following types are not supported by JSON
     d.pop('set')
@@ -602,23 +617,23 @@ def main():
 
     encoder = JsonEncoder()
     xml = encoder.encode_packet(signal)
-    print xml
+    print(xml)
 
     decoder = JsonDecoder()
     signal2 = decoder.decode_packet(xml)
     d2 = signal2.data
 
-    print "*** Elements of the original dictionary:"
+    print("*** Elements of the original dictionary:")
     for i in d.items():
-        print i
+        print(i)
 
-    print "*** Elements of the second dictionary:"
+    print("*** Elements of the second dictionary:")
     for i in d2.items():
-        print i
+        print(i)
 
-    print d == d2
-    print signal
-    print signal2
+    print(d == d2)
+    print(signal)
+    print(signal2)
 
 
 if __name__ == "__main__":
@@ -630,8 +645,8 @@ if __name__ == "__main__":
 
     import profile
     import pstats
-#    profile.run("main()", "stats")
-#    p = pstats.Stats("stats")
-#    p.sort_stats("cumulative").print_stats(15)
+#   profile.run("main()", "stats")
+#   p = pstats.Stats("stats")
+#   p.sort_stats("cumulative").print_stats(15)
 
     main()

@@ -20,8 +20,10 @@
 import os
 
 import pygame
-
-from MainloopFeedback import MainloopFeedback
+import sys
+sys.path.append("../FeedbackBase")# cannot find Feedback directly
+from FeedbackBase.MainloopFeedback import MainloopFeedback
+#from MainloopFeedback import MainloopFeedback
 
 
 class PygameFeedback(MainloopFeedback):

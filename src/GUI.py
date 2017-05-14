@@ -20,34 +20,48 @@
 
 import sys
 import logging
+import sys
+import time
 
-from PyQt4 import QtCore, QtGui
+#sys.path.append("../../")# ease the access of PyQt4
+sys.path.append("gui/")# ease the access of gui icons
+#from PyQt4 import QtCore, QtGui 
+from PyQt5 import QtCore, QtGui, QtWidgets
+#from pyqt5 import QtCore, QtGui 
+
+
 from gui.gui import Ui_MainWindow
 
 from lib import bcinetwork
 from lib import bcixml
 
-
+triggered = QtCore.pyqtSignal()
 NORMAL_COLOR = QtCore.Qt.black
 MODIFIED_COLOR = QtCore.Qt.gray
 
-class BciGui(QtGui.QMainWindow, Ui_MainWindow):
+#class BciGui(QtGui.QMainWindow, Ui_MainWindow):
+class BciGui(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self, protocol='bcixml'):
-        QtGui.QMainWindow.__init__(self)
+        #QtGui.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         self.setupUi(self)
 
-#        self.model = TableModel(self.tableView)
-#        self.tableView.setModel(self.model)
+#      self.model = TableModel(self.tableView)
+#      self.tableView.setModel(self.model)
+        self.protocol = protocol
 
         self.model = TableModel(self)
-        self.proxymodel = QtGui.QSortFilterProxyModel(self)
+        #self.proxymodel = QtGui.QSortFilterProxyModel(self)
+        self.proxymodel = QtCore.QSortFilterProxyModel(self)
         self.proxymodel.setSourceModel(self.model)
         self.proxymodel.setFilterKeyColumn(- 1)
         self.proxymodel.setDynamicSortFilter(True)
         self.tableView.setModel(self.proxymodel)
         self.tableView.verticalHeader().setVisible(False)
-        self.tableView.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+        #self.tableView.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+        #self.tableView.horizontalHeader().setResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.tableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.tableView.sortByColumn(0, QtCore.Qt.AscendingOrder)
         self.tableView.setSortingEnabled(True)
 
@@ -55,31 +69,47 @@ class BciGui(QtGui.QMainWindow, Ui_MainWindow):
         # connect toolbuttons to actions
         self.toolButton_clearFilter.setDefaultAction(self.actionClearFilter)
         # put the combobox into the toolbar before the sendinit action
-        self.comboBox_feedback = QtGui.QComboBox(self.toolBar)
-        self.comboBox_feedback.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                                             QtGui.QSizePolicy.Preferred)
+        #self.comboBox_feedback = QtGui.QComboBox(self.toolBar)
+        self.comboBox_feedback = QtWidgets.QComboBox(self.toolBar)
+        #self.comboBox_feedback.setSizePolicy(QtGui.QSizePolicy.Expanding,
+        #                            QtGui.QSizePolicy.Preferred)
+        self.comboBox_feedback.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                                             QtWidgets.QSizePolicy.Preferred)
         self.toolBar.insertWidget(self.actionSendInit, self.comboBox_feedback)
 
         # connect actions to methods
         #QtCore.QObject.connect(self.actionOpen, QtCore.SIGNAL("triggered()"), self.clicked)
-        QtCore.QObject.connect(self.actionChangeFeedbackController, QtCore.SIGNAL("triggered()"), self.changeFeedbackController)
-        QtCore.QObject.connect(self.actionClearFilter, QtCore.SIGNAL("triggered()"), self.clearFilter)
-        QtCore.QObject.connect(self.actionOpen, QtCore.SIGNAL("triggered()"), self.open)
-        QtCore.QObject.connect(self.actionPause, QtCore.SIGNAL("triggered()"), self.pause)
-        QtCore.QObject.connect(self.actionPlay, QtCore.SIGNAL("triggered()"), self.play)
-        QtCore.QObject.connect(self.actionQuit, QtCore.SIGNAL("triggered()"), self.quit)
-        QtCore.QObject.connect(self.actionStop, QtCore.SIGNAL("triggered()"), self.stop)
-        QtCore.QObject.connect(self.actionSave, QtCore.SIGNAL("triggered()"), self.save)
-        QtCore.QObject.connect(self.actionSaveAs, QtCore.SIGNAL("triggered()"), self.saveas)
-        QtCore.QObject.connect(self.actionSendModified, QtCore.SIGNAL("triggered()"), self.sendModified)
-        QtCore.QObject.connect(self.actionSendAll, QtCore.SIGNAL("triggered()"), self.sendAll)
-        QtCore.QObject.connect(self.actionSendInit, QtCore.SIGNAL("triggered()"), self.sendinit)
-        QtCore.QObject.connect(self.actionGet, QtCore.SIGNAL("triggered()"), self.get)
 
-        QtCore.QObject.connect(self.lineEdit, QtCore.SIGNAL("textChanged(const QString&)"), self.filter)
-        QtCore.QObject.connect(self.model, QtCore.SIGNAL("dataChanged(const QModelIndex&, const QModelIndex&)"), self.dataChanged)
+        #QtCore.QObject.connect(self.actionChangeFeedbackController, QtCore.SIGNAL("triggered()"), self.changeFeedbackController)
+        self.actionChangeFeedbackController.triggered.connect(self.changeFeedbackController)
+        #QtCore.QObject.connect(self.actionClearFilter, QtCore.SIGNAL("triggered()"), self.clearFilter)
+        self.actionClearFilter.triggered.connect(self.clearFilter)
+        #QtCore.QObject.connect(self.actionOpen, QtCore.SIGNAL("triggered()"), self.open)
+        self.actionOpen.triggered.connect(self.open)
+        #QtCore.QObject.connect(self.actionPause, QtCore.SIGNAL("triggered()"), self.pause)
+        self.actionPause.triggered.connect(self.pause)
+        #QtCore.QObject.connect(self.actionPlay, QtCore.SIGNAL("triggered()"), self.play)
+        self.actionPlay.triggered.connect(self.play)
+        #QtCore.QObject.connect(self.actionQuit, QtCore.SIGNAL("triggered()"), self.quit)
+        self.actionQuit.triggered.connect(self.quit)
+        #QtCore.QObject.connect(self.actionStop, QtCore.SIGNAL("triggered()"), self.stop)
+        self.actionStop.triggered.connect(self.stop)
+        #QtCore.QObject.connect(self.actionSave, QtCore.SIGNAL("triggered()"), self.save)
+        self.actionSave.triggered.connect(self.save)
+        #QtCore.QObject.connect(self.actionSaveAs, QtCore.SIGNAL("triggered()"), self.saveas)
+        self.actionSaveAs.triggered.connect(self.saveas)
+        #QtCore.QObject.connect(self.actionSendModified, QtCore.SIGNAL("triggered()"), self.sendModified)
+        self.actionSendModified.triggered.connect(self.sendModified)
+        #QtCore.QObject.connect(self.actionSendAll, QtCore.SIGNAL("triggered()"), self.sendAll)
+        self.actionSendAll.triggered.connect(self.sendAll)
+        #QtCore.QObject.connect(self.actionSendInit, QtCore.SIGNAL("triggered()"), self.sendinit)
+        self.actionSendInit.triggered.connect(self.sendinit)
+        #QtCore.QObject.connect(self.actionGet, QtCore.SIGNAL("triggered()"), self.get)
+        self.actionGet.triggered.connect(self.get)
+        #QtCore.QObject.connect(self.lineEdit, QtCore.SIGNAL("textChanged(const QString&)"), self.filter)
+        #QtCore.QObject.connect(self.model, QtCore.SIGNAL("dataChanged(const QModelIndex&, const QModelIndex&)"), self.dataChanged)
         self.feedbacks = []
-        self.protocol = protocol
+        
         self.setFeedbackController(bcinetwork.LOCALHOST, bcinetwork.FC_PORT)
 
 
@@ -116,7 +146,8 @@ class BciGui(QtGui.QMainWindow, Ui_MainWindow):
 
 
     def sendinit(self):
-        feedback = unicode(self.comboBox_feedback.currentText())
+        #feedback = unicode(self.comboBox_feedback.currentText())
+        feedback = str(self.comboBox_feedback.currentText())
         self.fc.send_init(feedback)
         d = self.fc.get_variables()
         entries = []
@@ -150,13 +181,15 @@ class BciGui(QtGui.QMainWindow, Ui_MainWindow):
 
     def open(self):
         filename = QtGui.QFileDialog.getOpenFileName(filter = "Configuration Files (*.json)")
-        filename = unicode(filename)
+        #filename = unicode(filename)
+        filename = str(filename)
         self.fc.load_configuration(filename)
 
 
     def save(self):
         filename = QtGui.QFileDialog.getSaveFileName(filter = "Configuration Files (*.json)")
-        filename = unicode(filename)
+        #filename = unicode(filename)
+        filename = str(filename)
         self.fc.save_configuration(filename)
 
     def saveas(self):
@@ -191,12 +224,18 @@ class BciGui(QtGui.QMainWindow, Ui_MainWindow):
         feedbacks = bcinet.getAvailableFeedbacks()
 
         if not feedbacks:
-            QtGui.QMessageBox.warning(self,
+            #QtGui.QMessageBox.warning(self,
+            #   "Ooops!",
+            #   "The Feedback Controller under the given adress: %s did not respond or has no feedbacks available!\n\nIt was not added to the list of available Feedback Controllers." % unicode(ip) + ":" + unicode(port))
+            QtWidgets.QMessageBox.warning(self,
                 "Ooops!",
-                "The Feedback Controller under the given adress: %s did not respond or has no feedbacks available!\n\nIt was not added to the list of available Feedback Controllers." % unicode(ip) + ":" + unicode(port))
+                #"The Feedback Controller under the given adress: %s did not respond or has no feedbacks available!\n\nIt was not added to the list of available Feedback Controllers." % unicode(ip) + ":" + unicode(port))
+                "The Feedback Controller under the given adress: %s did not respond or has no feedbacks available!\n\nIt was not added to the list of available Feedback Controllers." % str(ip) + ":" + str(port))
+            
             return
         else:
-            feedbacks.sort()
+            #print("CHECK IT OUT: %s"%(feedbacks))
+            #feedbacks.sort()
             self.feedbacks = feedbacks
             self.fc = bcinet
             self.update_feedback_box()
@@ -205,7 +244,8 @@ class BciGui(QtGui.QMainWindow, Ui_MainWindow):
 
     def update_feedback_box(self):
         self.comboBox_feedback.clear()
-        self.comboBox_feedback.addItems(self.feedbacks)
+        #self.comboBox_feedback.addItems(self.feedbacks)
+        self.comboBox_feedback.addItems(list(self.feedbacks))
 
 
     def clearFilter(self):
@@ -213,7 +253,8 @@ class BciGui(QtGui.QMainWindow, Ui_MainWindow):
 
 
     def filter(self, text):
-        text = unicode(text)
+        #text = unicode(text)
+        text = str(text)
         self.proxymodel.setFilterRegExp(QtCore.QRegExp(text, QtCore.Qt.CaseInsensitive, QtCore.QRegExp.FixedString))
 
 
@@ -225,8 +266,8 @@ class TableModel(QtCore.QAbstractTableModel):
         self.entryCount = 0
 
         self.header = ["Name", "Value", "Type"]
-#        for i in xrange(len(self.header)):
-#            self.setHeaderData(i, QtCore.Qt.Horizontal, QtCore.QVariant("foo"))#self.header[i]))
+#      for i in xrange(len(self.header)):
+#         self.setHeaderData(i, QtCore.Qt.Horizontal, QtCore.QVariant("foo"))#self.header[i]))
 
 
     def rowCount(self, parent):
@@ -243,7 +284,8 @@ class TableModel(QtCore.QAbstractTableModel):
             return QtCore.QVariant(QtGui.QColor(c))
         if role != QtCore.Qt.DisplayRole:
             return QtCore.QVariant()
-        return QtCore.QVariant(unicode(self.entry[index.row()][index.column()]))
+        #return QtCore.QVariant(unicode(self.entry[index.row()][index.column()]))
+        return QtCore.QVariant(str(self.entry[index.row()][index.column()]))
 
     def headerData(self, section, orientation, role):
         if role != QtCore.Qt.DisplayRole:
@@ -258,9 +300,10 @@ class TableModel(QtCore.QAbstractTableModel):
         if not index.isValid():
             return False
         #if not self.entry[index.row()].isValid(value.toString()):
-        #    return False
+        #   return False
         #self.entry[index.row()][index.column()] = unicode(value.toString())
-        self.entry[index.row()].setValue(unicode(value.toString()))
+        #self.entry[index.row()].setValue(unicode(value.toString()))
+        self.entry[index.row()].setValue(str(value.toString()))
         self.entry[index.row()].modified = True
         self.emit(QtCore.SIGNAL("dataChanged(const QModelIndex &, const QModelIndex &)"), index, index)
         return True
@@ -348,9 +391,11 @@ class Entry(object):
 
 def main(protocol='bcixml'):
     loglevel = logging.DEBUG
+    #loglevel = logging.NOTSET
     logging.basicConfig(level=loglevel, format='%(name)-12s %(levelname)-8s %(message)s')
 
-    app = QtGui.QApplication(sys.argv)
+    #app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     gui = BciGui(protocol)
     gui.show()
 

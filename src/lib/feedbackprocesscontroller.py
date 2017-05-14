@@ -23,7 +23,7 @@ from multiprocessing import Process, Event
 
 from lib.PluginController import PluginController
 import lib.PluginController
-import ipc
+import lib.ipc as ipc
 
 
 class FeedbackProcess(Process):

@@ -25,8 +25,7 @@ from lib import bcinetwork
 from lib import bcixml
 from FeedbackBase.Feedback import Feedback
 from lib.feedbackprocesscontroller import FeedbackProcessController
-import ipc
-
+import lib.ipc as ipc
 
 class FeedbackController(object):
     """Feedback Controller.
@@ -178,9 +177,11 @@ class UDPDispatcher(asyncore.dispatcher):
         Feedback Controller.
         """
         try:
-            data, address = self.recvfrom(bcinetwork.BUFFER_SIZE)
+            #data, address = self.recvfrom(bcinetwork.BUFFER_SIZE)
+            data = self.recv(bcinetwork.BUFFER_SIZE)
             signal = self.decoder.decode_packet(data)
-            signal.peeraddr = address
+            #signal.peeraddr = address
+            signal.peeraddr = (bcinetwork.LOCALHOST, bcinetwork.FC_PORT)
             self.fc.handle_signal(signal)
         except:
             self.fc.logger.exception("Handling incoming signal caused an exception:")

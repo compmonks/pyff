@@ -58,7 +58,8 @@ class ICSetClass:
 		self.map = {}
 
 	def Add(self, pclass):
-		if self.map.has_key(pclass.GetLabel()):
+		#if self.map.has_key(pclass.GetLabel()):
+		if pclass.GetLabel() in self.map:
 			return None
 
 		self.map[pclass.GetLabel()] = pclass
@@ -68,7 +69,8 @@ class ICSetClass:
 		if not isinstance(lclass, basestring):
 			lclass = lclass.GetLabel()
 
-		if not self.map.has_key(lclass):
+		#if not self.map.has_key(lclass):
+		if lclass not in self.map:
 			return None
 
 		r = self.map[lclass]
@@ -79,7 +81,8 @@ class ICSetClass:
 		if not isinstance(lclass, basestring):
 			lclass = lclass.GetLabel()
 
-		if not self.map.has_key(lclass):
+		#if not self.map.has_key(lclass):
+		if lclass not in self.map:
 			return None
 
 		return self.map[lclass]
@@ -88,7 +91,8 @@ class ICSetClass:
 		if not isinstance(lclass, basestring):
 			lclass = lclass.GetLabel()
 
-		return self.map.has_key(lclass)
+		#return self.map.has_key(lclass)
+		return lclass in self.map
 
 	def Empty(self):
 		return (len(self.map) == 0)
@@ -107,7 +111,8 @@ class ICSetClassifier:
 		self.map = {}
 
 	def Add(self, pclr):
-		if self.map.has_key(pclr.GetName()):
+		#if self.map.has_key(pclr.GetName()):
+		if pclr.GetName() in self.map:
 			return None
 
 		self.map[pclr.GetName()] = pclr
@@ -117,7 +122,8 @@ class ICSetClassifier:
 		if not isinstance(nclr, basestring):
 			nclr = nclr.GetName()
 
-		if not self.map.has_key(nclr):
+		#if not self.map.has_key(nclr):
+		if nclr not in self.map:
 			return None
 
 		r = self.map[nclr]
@@ -128,7 +134,8 @@ class ICSetClassifier:
 		if not isinstance(nclr, basestring):
 			nclr = nclr.GetName()
 
-		if not self.map.has_key(nclr):
+		#if not self.map.has_key(nclr):
+		if nclr not in self.map:
 			return None
 
 		return self.map[nclr]
@@ -137,7 +144,8 @@ class ICSetClassifier:
 		if not isinstance(nclr, basestring):
 			nclr = nclr.GetName()
 
-		return self.map.has_key(nclr)
+		#return self.map.has_key(nclr)
+		return nclr in self.map
 
 	def Empty(self):
 		return (len(self.map) == 0)
@@ -169,17 +177,17 @@ class ICMessage:
 
 	def Dump(self):
 		if self.classifiers.Empty():
-			print "[ICMessage::Dump] Eternal sunshine of an empty message"
+			print("[ICMessage::Dump] Eternal sunshine of an empty message")
 			return
 
-		print "[ICMessage::Dump] Dumping internal structure"
+		print("[ICMessage::Dump] Dumping internal structure")
 		for k in self.classifiers.map.keys():
 			v = self.classifiers.Get(k)
-			print "+ Classifier %s [\"%s\", ValueType=%d LabelType=%d]" % (v.GetName(), v.GetDescription(), v.GetValueType(), v.GetLabelType())
+			print("+ Classifier %s [\"%s\", ValueType=%d LabelType=%d]" % (v.GetName(), v.GetDescription(), v.GetValueType(), v.GetLabelType()))
 
 			for k2 in v.classes.map.keys():
 				v2 = v.classes.map[k2]
-				print "   --> Class Value=%.6f Label=%s" % (v2.GetValue(), v2.GetLabel())
+				print("   --> Class Value=%.6f Label=%s" % (v2.GetValue(), v2.GetLabel()))
 
 # 
 # 	ICClass
@@ -475,7 +483,7 @@ class ICSerializer:
 				if initialize:
 					if cptr.classes.Has(klabel):
 						return None
-					print klabel, tvalue
+					print(klabel, tvalue)
 					kptr = ICClass(klabel, float(tvalue))
 					cptr.classes.Add(kptr)
 				else:

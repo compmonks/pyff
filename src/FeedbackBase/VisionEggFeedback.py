@@ -19,7 +19,8 @@ import logging, time
 
 import VisionEgg
 import pygame
-
+import sys
+sys.path.append("../FeedbackBase")# cannot find Feedback directly
 from FeedbackBase.MainloopFeedback import MainloopFeedback
 
 from lib import marker

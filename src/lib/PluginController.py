@@ -64,7 +64,8 @@ class PluginController(object):
                     self.logger.info("Found feedbacks.list in %s" % root)
                     del dirs[:]
                     fbdict = self.load_feedback_list(root+os.path.sep+'feedbacks.list', plugindir)
-                    for fb, module in fbdict.iteritems():
+                    #for fb, module in fbdict.iteritems():
+                    for fb, module in fbdict.items():
                         self.availablePlugins[fb] = module
                     continue
 
@@ -106,7 +107,8 @@ class PluginController(object):
         """Unload currently loaded plugin."""
         if self.oldModules:
             for mod in sys.modules.keys():
-                if not self.oldModules.has_key(mod):
+                #if not self.oldModules.has_key(mod):
+                if mod not in self.oldModules:
                     del sys.modules[mod]
             self.oldModules = None
 
@@ -118,7 +120,7 @@ def main():
     pc = PluginController(["../Feedbacks", "../../../pyff-tu/src/Feedbacks"], FeedbackBase.Feedback.Feedback)
     pc.find_plugins()
     for key in pc.availablePlugins:
-        print key, pc.availablePlugins[key]
+        print(key, pc.availablePlugins[key])
 
 if __name__ == "__main__":
     main()

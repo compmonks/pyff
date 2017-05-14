@@ -26,10 +26,11 @@ between the Feedback Controller and the Feedbacks
 import asyncore
 import asynchat
 import socket
-import cPickle as pickle
+#import cPickle as pickle
+import pickle
 import logging
 
-import bcixml
+import lib.bcixml as bcixml
 
 
 # delimiter for IPC messages.
@@ -38,7 +39,7 @@ TERMINATOR = "\r\n\r\n"
 IPC_PORT = 12347
 LOCALHOST = "127.0.0.1"
 
-import thread
+import _thread
 
 def ipcloop():
     """Start the IPC loop."""
@@ -65,7 +66,8 @@ class IPCConnectionHandler(asyncore.dispatcher):
         self.ipcchan = None
         self.fc = fc
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        #self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.set_reuse_addr()
         self.bind((LOCALHOST, IPC_PORT))
         self.listen(5)
 

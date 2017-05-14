@@ -15,8 +15,10 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
-from Feedback import Feedback
+import sys
+sys.path.append("../FeedbackBase")# cannot find Feedback directly
+# from Feedback import Feedback
+from FeedbackBase.Feedback import Feedback
 
 
 class MainloopFeedback(Feedback):
