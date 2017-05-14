@@ -1,406 +1,217 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-# GUI.py -
-# Copyright (C) 2007-2011  Bastian Venthur
+# Form implementation generated from reading ui file 'gui.ui'
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# Created: Mon May 30 16:08:07 2011
+#      by: PyQt4 UI code generator 4.8.3
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-
+# WARNING! All changes made in this file will be lost!
 import sys
-import logging
-import sys
-import time
-
-#sys.path.append("../../")# ease the access of PyQt4
-sys.path.append("gui/")# ease the access of gui icons
-#from PyQt4 import QtCore, QtGui 
+#sys.path.append("../../../")# ease the access of PyQt4
+sys.path.append("../gui")# it seems that there is a problem reading icons_rc in the gui folder
+#from PyQt4 import QtCore, QtGui
 from PyQt5 import QtCore, QtGui, QtWidgets
-#from pyqt5 import QtCore, QtGui 
 
-
-from gui.gui import Ui_MainWindow
-
-from lib import bcinetwork
-from lib import bcixml
-
-triggered = QtCore.pyqtSignal()
-NORMAL_COLOR = QtCore.Qt.black
-MODIFIED_COLOR = QtCore.Qt.gray
-
-#class BciGui(QtGui.QMainWindow, Ui_MainWindow):
-class BciGui(QtWidgets.QMainWindow, Ui_MainWindow):
-
-    def __init__(self, protocol='bcixml'):
-        #QtGui.QMainWindow.__init__(self)
-        QtWidgets.QMainWindow.__init__(self)
-        self.setupUi(self)
-
-#      self.model = TableModel(self.tableView)
-#      self.tableView.setModel(self.model)
-        self.protocol = protocol
-
-        self.model = TableModel(self)
-        #self.proxymodel = QtGui.QSortFilterProxyModel(self)
-        self.proxymodel = QtCore.QSortFilterProxyModel(self)
-        self.proxymodel.setSourceModel(self.model)
-        self.proxymodel.setFilterKeyColumn(- 1)
-        self.proxymodel.setDynamicSortFilter(True)
-        self.tableView.setModel(self.proxymodel)
-        self.tableView.verticalHeader().setVisible(False)
-        #self.tableView.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
-        #self.tableView.horizontalHeader().setResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        self.tableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        self.tableView.sortByColumn(0, QtCore.Qt.AscendingOrder)
-        self.tableView.setSortingEnabled(True)
-
-
-        # connect toolbuttons to actions
-        self.toolButton_clearFilter.setDefaultAction(self.actionClearFilter)
-        # put the combobox into the toolbar before the sendinit action
-        #self.comboBox_feedback = QtGui.QComboBox(self.toolBar)
-        self.comboBox_feedback = QtWidgets.QComboBox(self.toolBar)
-        #self.comboBox_feedback.setSizePolicy(QtGui.QSizePolicy.Expanding,
-        #                            QtGui.QSizePolicy.Preferred)
-        self.comboBox_feedback.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-                                             QtWidgets.QSizePolicy.Preferred)
-        self.toolBar.insertWidget(self.actionSendInit, self.comboBox_feedback)
-
-        # connect actions to methods
-        #QtCore.QObject.connect(self.actionOpen, QtCore.SIGNAL("triggered()"), self.clicked)
-
-        #QtCore.QObject.connect(self.actionChangeFeedbackController, QtCore.SIGNAL("triggered()"), self.changeFeedbackController)
-        self.actionChangeFeedbackController.triggered.connect(self.changeFeedbackController)
-        #QtCore.QObject.connect(self.actionClearFilter, QtCore.SIGNAL("triggered()"), self.clearFilter)
-        self.actionClearFilter.triggered.connect(self.clearFilter)
-        #QtCore.QObject.connect(self.actionOpen, QtCore.SIGNAL("triggered()"), self.open)
-        self.actionOpen.triggered.connect(self.open)
-        #QtCore.QObject.connect(self.actionPause, QtCore.SIGNAL("triggered()"), self.pause)
-        self.actionPause.triggered.connect(self.pause)
-        #QtCore.QObject.connect(self.actionPlay, QtCore.SIGNAL("triggered()"), self.play)
-        self.actionPlay.triggered.connect(self.play)
-        #QtCore.QObject.connect(self.actionQuit, QtCore.SIGNAL("triggered()"), self.quit)
-        self.actionQuit.triggered.connect(self.quit)
-        #QtCore.QObject.connect(self.actionStop, QtCore.SIGNAL("triggered()"), self.stop)
-        self.actionStop.triggered.connect(self.stop)
-        #QtCore.QObject.connect(self.actionSave, QtCore.SIGNAL("triggered()"), self.save)
-        self.actionSave.triggered.connect(self.save)
-        #QtCore.QObject.connect(self.actionSaveAs, QtCore.SIGNAL("triggered()"), self.saveas)
-        self.actionSaveAs.triggered.connect(self.saveas)
-        #QtCore.QObject.connect(self.actionSendModified, QtCore.SIGNAL("triggered()"), self.sendModified)
-        self.actionSendModified.triggered.connect(self.sendModified)
-        #QtCore.QObject.connect(self.actionSendAll, QtCore.SIGNAL("triggered()"), self.sendAll)
-        self.actionSendAll.triggered.connect(self.sendAll)
-        #QtCore.QObject.connect(self.actionSendInit, QtCore.SIGNAL("triggered()"), self.sendinit)
-        self.actionSendInit.triggered.connect(self.sendinit)
-        #QtCore.QObject.connect(self.actionGet, QtCore.SIGNAL("triggered()"), self.get)
-        self.actionGet.triggered.connect(self.get)
-        #QtCore.QObject.connect(self.lineEdit, QtCore.SIGNAL("textChanged(const QString&)"), self.filter)
-        #QtCore.QObject.connect(self.model, QtCore.SIGNAL("dataChanged(const QModelIndex&, const QModelIndex&)"), self.dataChanged)
-        self.feedbacks = []
-        
-        self.setFeedbackController(bcinetwork.LOCALHOST, bcinetwork.FC_PORT)
-
-
-    def __del__(self):
-        self.fc.stop()
-        self.fc.quit_feedback_controller()
-
-    def dataChanged(self):
-        self.sendModified()
-
-    def play(self):
-        self.fc.play()
-
-    def pause(self):
-        self.fc.pause()
-
-    def stop(self):
-        self.fc.stop()
-
-    def quit(self):
-        self.fc.quit()
-
-
-
-    def get(self):
-        d = self.fc.get_variables()
-        entries = []
-        for name, value in d.iteritems():
-            e = Entry(name, value)
-            entries.append(e)
-        # FIXME: this will clear the whole table and just put in the new
-        # entries (ignoring the entries of the other players.
-        self.model.setElements(entries)
-
-
-    def sendinit(self):
-        #feedback = unicode(self.comboBox_feedback.currentText())
-        feedback = str(self.comboBox_feedback.currentText())
-        self.fc.send_init(feedback)
-        d = self.fc.get_variables()
-        entries = []
-        for name, value in d.iteritems():
-            e = Entry(name, value)
-            entries.append(e)
-        self.model.setElements(entries)
-
-
-    def sendModified(self):
-        signal = self.makeSignal(True)
-        self.fc.send_signal(signal)
-
-
-    def sendAll(self):
-        signal = self.makeSignal()
-        self.fc.send_signal(signal)
-
-
-    def makeSignal(self, modifiedOnly=False):
-        """Create an Interaction Signal from the Variables in the Table."""
-        data = {}
-        for elem in self.model.entry:
-            if not modifiedOnly or (modifiedOnly and elem.modified):
-                data[elem.name] = elem.value
-                # FIXME: should
-                elem.modified = False
-        signal = bcixml.BciSignal(data, None, bcixml.INTERACTION_SIGNAL)
-        return signal
-
-
-    def open(self):
-        filename = QtGui.QFileDialog.getOpenFileName(filter = "Configuration Files (*.json)")
-        #filename = unicode(filename)
-        filename = str(filename)
-        self.fc.load_configuration(filename)
-
-
-    def save(self):
-        filename = QtGui.QFileDialog.getSaveFileName(filter = "Configuration Files (*.json)")
-        #filename = unicode(filename)
-        filename = str(filename)
-        self.fc.save_configuration(filename)
-
-    def saveas(self):
-        pass
-
-
-    def changeFeedbackController(self):
-        try:
-            ip, port = self.getFeedbackControllerAddress()
-            self.setFeedbackController(ip, port)
-        except:
-            self.logger.error("Unable to connect to Feedback Controller under %s:%s" % (ip, port))
-
-
-    def getFeedbackControllerAddress(self):
-        text, ok = QtGui.QInputDialog.getText(self, "Add Feedback Controller", "Please enter the address[:port] of the Feedback Controller.\n\nThe adress can be a hostname or numeric, the port is optional.")
-        if not ok:
-            raise Exception
-
-        ip, port = bcinetwork.LOCALHOST, bcinetwork.FC_PORT
-        ipport = text.split(":")
-        if len(ipport) >= 1:
-            ip = ipport[0]
-        if len(ipport) >= 2:
-            port = ipport[1]
-        return ip, port
-
-
-    def setFeedbackController(self, ip, port):
-        # ask feedback controller under given ip for available feedbacks
-        bcinet = bcinetwork.BciNetwork(ip, port, bcinetwork.GUI_PORT, self.protocol)
-        feedbacks = bcinet.getAvailableFeedbacks()
-
-        if not feedbacks:
-            #QtGui.QMessageBox.warning(self,
-            #   "Ooops!",
-            #   "The Feedback Controller under the given adress: %s did not respond or has no feedbacks available!\n\nIt was not added to the list of available Feedback Controllers." % unicode(ip) + ":" + unicode(port))
-            QtWidgets.QMessageBox.warning(self,
-                "Ooops!",
-                #"The Feedback Controller under the given adress: %s did not respond or has no feedbacks available!\n\nIt was not added to the list of available Feedback Controllers." % unicode(ip) + ":" + unicode(port))
-                "The Feedback Controller under the given adress: %s did not respond or has no feedbacks available!\n\nIt was not added to the list of available Feedback Controllers." % str(ip) + ":" + str(port))
-            
-            return
-        else:
-            #print("CHECK IT OUT: %s"%(feedbacks))
-            #feedbacks.sort()
-            self.feedbacks = feedbacks
-            self.fc = bcinet
-            self.update_feedback_box()
-            self.statusbar.showMessage("Feedback Controller: %s:%s" % (ip, port))
-
-
-    def update_feedback_box(self):
-        self.comboBox_feedback.clear()
-        #self.comboBox_feedback.addItems(self.feedbacks)
-        self.comboBox_feedback.addItems(list(self.feedbacks))
-
-
-    def clearFilter(self):
-        self.lineEdit.clear()
-
-
-    def filter(self, text):
-        #text = unicode(text)
-        text = str(text)
-        self.proxymodel.setFilterRegExp(QtCore.QRegExp(text, QtCore.Qt.CaseInsensitive, QtCore.QRegExp.FixedString))
-
-
-class TableModel(QtCore.QAbstractTableModel):
-
-    def __init__(self, parent=None):
-        QtCore.QAbstractTableModel.__init__(self, parent)
-        self.entry = []
-        self.entryCount = 0
-
-        self.header = ["Name", "Value", "Type"]
-#      for i in xrange(len(self.header)):
-#         self.setHeaderData(i, QtCore.Qt.Horizontal, QtCore.QVariant("foo"))#self.header[i]))
-
-
-    def rowCount(self, parent):
-        return len(self.entry)
-
-    def columnCount(self, parent):
-        return len(self.header)
-
-    def data(self, index, role):
-        if not index.isValid():
-            return QtCore.QVariant()
-        if role == QtCore.Qt.ForegroundRole:
-            c = MODIFIED_COLOR if self.entry[index.row()].modified else NORMAL_COLOR
-            return QtCore.QVariant(QtGui.QColor(c))
-        if role != QtCore.Qt.DisplayRole:
-            return QtCore.QVariant()
-        #return QtCore.QVariant(unicode(self.entry[index.row()][index.column()]))
-        return QtCore.QVariant(str(self.entry[index.row()][index.column()]))
-
-    def headerData(self, section, orientation, role):
-        if role != QtCore.Qt.DisplayRole:
-            return QtCore.QVariant()
-        if orientation == QtCore.Qt.Horizontal:
-            return QtCore.QVariant(self.header[section])
-        else:
-            return QtCore.QVariant(int(section))
-
-    def setData(self, index, value, role):
-        """Is called whenever the user modified a value in the table."""
-        if not index.isValid():
-            return False
-        #if not self.entry[index.row()].isValid(value.toString()):
-        #   return False
-        #self.entry[index.row()][index.column()] = unicode(value.toString())
-        #self.entry[index.row()].setValue(unicode(value.toString()))
-        self.entry[index.row()].setValue(str(value.toString()))
-        self.entry[index.row()].modified = True
-        self.emit(QtCore.SIGNAL("dataChanged(const QModelIndex &, const QModelIndex &)"), index, index)
-        return True
-
-    def flags(self, index):
-        r = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
-        if index.column() == 1:
-            r = r | QtCore.Qt.ItemIsEditable
-        return r
-
-    # Own methods:
-    def addElement(self, entry):
-        self.entryCount += 1
-        pos = len(self.entry)
-        self.beginInsertRows(QtCore.QModelIndex(), pos, pos + 1)
-        self.entry.append(entry)
-        self.endInsertRows()
-        self.emit(QtCore.SIGNAL("layoutChanged()"))
-
-
-    def setElements(self, entries):
-        self.beginRemoveRows(QtCore.QModelIndex(), 0, len(self.entry)-1)
-        self.entry = []
-        self.endRemoveRows()
-        self.beginInsertRows(QtCore.QModelIndex(), 0, len(entries)-1)
-        self.entryCount = len(entries)
-        for i in entries:
-            self.entry.append(i)
-        self.endInsertRows()
-        self.emit(QtCore.SIGNAL("layoutChanged()"))
-
-
-class Entry(object):
-    """
-    Represents an entry in the table, containing: name, value, the important
-    flag and probably other fields.
-    """
-
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
-        self.type = type(value)#bcixml.XmlEncoder()._XmlEncoder__get_type(value)
-        self.modified = False
-
-    def __getitem__(self, i):
-        if i == 0:
-            return self.name
-        elif i == 1:
-            return self.value
-        elif i == 2:
-            return self.type
-        else:
-            return "ERROR!"
-
-    def __setitem__(self, i, value):
-        if i == 0:
-            self.name = value
-        elif i == 1:
-            self.value = value
-        else:
-            return "ERROR!"
-
-    def __len__(self):
-        return 3
-
-    def __str__(self):
-        return str(self.name) + str(self.value) + str(self.type)
-
-    def isValid(self, value):
-        try:
-            t = self.type(value)
-        except:
-            return False
-        return True
-
-    def setValue(self, value):
-        oldValue = self.value
-        try:
-            newValue = eval(value)
-            if self.type == type(newValue):
-                self.value = newValue
-        except:
-            self.value = oldValue
-
-
-def main(protocol='bcixml'):
-    loglevel = logging.DEBUG
-    #loglevel = logging.NOTSET
-    logging.basicConfig(level=loglevel, format='%(name)-12s %(levelname)-8s %(message)s')
-
-    #app = QtGui.QApplication(sys.argv)
-    app = QtWidgets.QApplication(sys.argv)
-    gui = BciGui(protocol)
-    gui.show()
-
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    main()
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    _fromUtf8 = lambda s: s
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName(_fromUtf8("MainWindow"))
+        MainWindow.resize(942, 693)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/PyffLogoNeu.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        MainWindow.setWindowIcon(icon)
+        #self.centralwidget = QtGui.QWidget(MainWindow)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
+        #self.vboxlayout = QtGui.QVBoxLayout(self.centralwidget)
+        self.vboxlayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.vboxlayout.setSpacing(6)
+        #self.vboxlayout.setMargin(9)
+        self.vboxlayout.setContentsMargins(9,9,9,9)
+        self.vboxlayout.setObjectName(_fromUtf8("vboxlayout"))
+        #self.hboxlayout = QtGui.QHBoxLayout()
+        self.hboxlayout = QtWidgets.QHBoxLayout()
+        self.hboxlayout.setSpacing(6)
+        #self.hboxlayout.setMargin(0)
+        self.vboxlayout.setContentsMargins(0,0,0,0)
+        self.hboxlayout.setObjectName(_fromUtf8("hboxlayout"))
+        #self.label = QtGui.QLabel(self.centralwidget)
+        self.label = QtWidgets.QLabel(self.centralwidget)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.hboxlayout.addWidget(self.label)
+        #self.lineEdit = QtGui.QLineEdit(self.centralwidget)
+        self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
+        self.lineEdit.setText(_fromUtf8(""))
+        self.lineEdit.setObjectName(_fromUtf8("lineEdit"))
+        self.hboxlayout.addWidget(self.lineEdit)
+        #self.toolButton_clearFilter = QtGui.QToolButton(self.centralwidget)
+        self.toolButton_clearFilter = QtWidgets.QToolButton(self.centralwidget)
+        self.toolButton_clearFilter.setObjectName(_fromUtf8("toolButton_clearFilter"))
+        self.hboxlayout.addWidget(self.toolButton_clearFilter)
+        self.vboxlayout.addLayout(self.hboxlayout)
+        #self.tableView = QtGui.QTableView(self.centralwidget)
+        self.tableView = QtWidgets.QTableView(self.centralwidget)
+        self.tableView.setAlternatingRowColors(True)
+        #self.tableView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.tableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableView.setShowGrid(False)
+        self.tableView.setObjectName(_fromUtf8("tableView"))
+        self.vboxlayout.addWidget(self.tableView)
+        MainWindow.setCentralWidget(self.centralwidget)
+        #self.menubar = QtGui.QMenuBar(MainWindow)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 942, 21))
+        self.menubar.setObjectName(_fromUtf8("menubar"))
+        MainWindow.setMenuBar(self.menubar)
+        #self.statusbar = QtGui.QStatusBar(MainWindow)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName(_fromUtf8("statusbar"))
+        MainWindow.setStatusBar(self.statusbar)
+        #self.toolBar = QtGui.QToolBar(MainWindow)
+        self.toolBar = QtWidgets.QToolBar(MainWindow)
+        self.toolBar.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+        self.toolBar.setObjectName(_fromUtf8("toolBar"))
+        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
+        #self.actionOpen = QtGui.QAction(MainWindow)
+        self.actionOpen = QtWidgets.QAction(MainWindow)
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/open.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionOpen.setIcon(icon1)
+        self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
+        #self.actionSave = QtGui.QAction(MainWindow)
+        self.actionSave = QtWidgets.QAction(MainWindow)
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/save.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionSave.setIcon(icon2)
+        self.actionSave.setObjectName(_fromUtf8("actionSave"))
+        #self.actionSaveAs = QtGui.QAction(MainWindow)
+        self.actionSaveAs = QtWidgets.QAction(MainWindow)
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/saveas.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionSaveAs.setIcon(icon3)
+        self.actionSaveAs.setObjectName(_fromUtf8("actionSaveAs"))
+        #self.actionPlay = QtGui.QAction(MainWindow)
+        self.actionPlay = QtWidgets.QAction(MainWindow)
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/play.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionPlay.setIcon(icon4)
+        self.actionPlay.setObjectName(_fromUtf8("actionPlay"))
+        #self.actionPause = QtGui.QAction(MainWindow)
+        self.actionPause = QtWidgets.QAction(MainWindow)
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/pause.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionPause.setIcon(icon5)
+        self.actionPause.setObjectName(_fromUtf8("actionPause"))
+        #self.actionGet = QtGui.QAction(MainWindow)
+        self.actionGet = QtWidgets.QAction(MainWindow)
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/get.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionGet.setIcon(icon6)
+        self.actionGet.setObjectName(_fromUtf8("actionGet"))
+        #self.actionSendInit = QtGui.QAction(MainWindow)
+        self.actionSendInit = QtWidgets.QAction(MainWindow)
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/sendinit.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionSendInit.setIcon(icon7)
+        self.actionSendInit.setObjectName(_fromUtf8("actionSendInit"))
+        #self.actionSendAll = QtGui.QAction(MainWindow)
+        self.actionSendAll = QtWidgets.QAction(MainWindow)
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/sendall.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionSendAll.setIcon(icon8)
+        self.actionSendAll.setObjectName(_fromUtf8("actionSendAll"))
+        #self.actionQuit = QtGui.QAction(MainWindow)
+        self.actionQuit = QtWidgets.QAction(MainWindow)
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/quit.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionQuit.setIcon(icon9)
+        self.actionQuit.setObjectName(_fromUtf8("actionQuit"))
+        #self.actionChangeFeedbackController = QtGui.QAction(MainWindow)
+        self.actionChangeFeedbackController = QtWidgets.QAction(MainWindow)
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/connect.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionChangeFeedbackController.setIcon(icon10)
+        self.actionChangeFeedbackController.setObjectName(_fromUtf8("actionChangeFeedbackController"))
+        #self.actionClearFilter = QtGui.QAction(MainWindow)
+        self.actionClearFilter = QtWidgets.QAction(MainWindow)
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/clear.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionClearFilter.setIcon(icon11)
+        self.actionClearFilter.setObjectName(_fromUtf8("actionClearFilter"))
+        #self.actionSendModified = QtGui.QAction(MainWindow)
+        self.actionSendModified = QtWidgets.QAction(MainWindow)
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/sendmodified.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionSendModified.setIcon(icon12)
+        self.actionSendModified.setObjectName(_fromUtf8("actionSendModified"))
+        #self.actionStop = QtGui.QAction(MainWindow)
+        self.actionStop = QtWidgets.QAction(MainWindow)
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(_fromUtf8(":/icons/stop.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionStop.setIcon(icon13)
+        self.actionStop.setObjectName(_fromUtf8("actionStop"))
+        self.toolBar.addAction(self.actionOpen)
+        self.toolBar.addAction(self.actionSave)
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.actionPlay)
+        self.toolBar.addAction(self.actionPause)
+        self.toolBar.addAction(self.actionStop)
+        self.toolBar.addAction(self.actionQuit)
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.actionGet)
+        self.toolBar.addSeparator()
+        self.toolBar.addAction(self.actionChangeFeedbackController)
+        self.toolBar.addAction(self.actionSendInit)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        #MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "Pyff", None, QtGui.QApplication.UnicodeUTF8))
+        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "Pyff", None))
+        #self.label.setText(QtGui.QApplication.translate("MainWindow", "Filter:", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtWidgets.QApplication.translate("MainWindow", "Filter:", None))
+        #self.toolBar.setWindowTitle(QtGui.QApplication.translate("MainWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
+        self.toolBar.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "toolBar", None))
+        #self.actionOpen.setText(QtGui.QApplication.translate("MainWindow", "&Open...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpen.setText(QtWidgets.QApplication.translate("MainWindow", "&Open...", None))
+        #self.actionOpen.setStatusTip(QtGui.QApplication.translate("MainWindow", "Open an Existing File", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpen.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "Open an Existing File", None))
+        #self.actionOpen.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+O", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpen.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+O", None))
+        #self.actionSave.setText(QtGui.QApplication.translate("MainWindow", "&Save", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave.setText(QtWidgets.QApplication.translate("MainWindow", "&Save", None))
+        #self.actionSave.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+S", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+S", None))
+        #self.actionSaveAs.setText(QtGui.QApplication.translate("MainWindow", "Save &As...", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSaveAs.setText(QtWidgets.QApplication.translate("MainWindow", "Save &As...", None))
+        #self.actionSaveAs.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+A", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSaveAs.setShortcut(QtWidgets.QApplication.translate("MainWindow", "Ctrl+A", None))
+        #self.actionPlay.setText(QtGui.QApplication.translate("MainWindow", "Play", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPlay.setText(QtWidgets.QApplication.translate("MainWindow", "Play", None))
+        #self.actionPause.setText(QtGui.QApplication.translate("MainWindow", "Pause", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionPause.setText(QtWidgets.QApplication.translate("MainWindow", "Pause", None))
+        #self.actionGet.setText(QtGui.QApplication.translate("MainWindow", "Refresh", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionGet.setText(QtWidgets.QApplication.translate("MainWindow", "Refresh", None))
+        #self.actionGet.setToolTip(QtGui.QApplication.translate("MainWindow", "Refresh varialbes from Feedback", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionGet.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Refresh varialbes from Feedback", None))
+        #self.actionSendInit.setText(QtGui.QApplication.translate("MainWindow", "SendInit", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSendInit.setText(QtWidgets.QApplication.translate("MainWindow", "SendInit", None))
+        #self.actionSendAll.setText(QtGui.QApplication.translate("MainWindow", "Send All", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSendAll.setText(QtWidgets.QApplication.translate("MainWindow", "Send All", None))
+        #self.actionQuit.setText(QtGui.QApplication.translate("MainWindow", "Quit", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionQuit.setText(QtWidgets.QApplication.translate("MainWindow", "Quit", None))
+        #self.actionChangeFeedbackController.setText(QtGui.QApplication.translate("MainWindow", "Connect", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionChangeFeedbackController.setText(QtWidgets.QApplication.translate("MainWindow", "Connect", None))
+        #self.actionClearFilter.setText(QtGui.QApplication.translate("MainWindow", "clearFilter", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionClearFilter.setText(QtWidgets.QApplication.translate("MainWindow", "clearFilter", None))
+        #self.actionSendModified.setText(QtGui.QApplication.translate("MainWindow", "Send Modified", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSendModified.setText(QtWidgets.QApplication.translate("MainWindow", "Send Modified", None))
+        #self.actionStop.setText(QtGui.QApplication.translate("MainWindow", "Stop", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionStop.setText(QtWidgets.QApplication.translate("MainWindow", "Stop", None))
+
+import icons_rc
