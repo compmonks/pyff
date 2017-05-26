@@ -98,29 +98,21 @@ def main():
 
     # get the rest
     fbpath = options.fbpath
-    guiproc = None
+    guiproc = None$
     if not options.nogui:
-        #guiproc = Process(target=GUI.main, args=(options.protocol,))
         guiproc = Process(target=GUI.main, args=(options.protocol,))
         guiproc.start()
-        print("GUI OK")
     port = None
     if options.port != None:
         port = int(options.port, 16)
     try:
-        print("FBPATH: %s"%(fbpath))
-        print("PORT: %s"%(port))
-        print("PROTOCOL: %s"%(options.protocol))
-        
         fc = FeedbackController(fbpath, port, options.protocol)
-        print("FC OK")
     except:
         logging.exception("Could not start Feedback Controller, is another instance already running?")
         return
     ###### CURRENT ISSUE START HERE #####
     try:
         fc.start()
-        print("START OK")
     except (KeyboardInterrupt, SystemExit):
         logging.debug("Caught keyboard interrupt or system exit; quitting")
     except:
@@ -140,5 +132,4 @@ def main():
 
 
 if __name__ == '__main__':
-  #print("OK")
   main()

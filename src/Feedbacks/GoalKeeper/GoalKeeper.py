@@ -24,6 +24,7 @@
 
 import random
 import sys
+sys.path.append("../..")
 import math
 import random
 import os
@@ -78,7 +79,7 @@ class GoalKeeper(PygameFeedback):
                                                 # self.adaptive_trial_time = True
 
         ### adaptation specific settings (used only if self.adaptive_trial_time = True) ###
-        self.adaptive_trial_time = True
+        self.adaptive_trial_time = False
         if self.adaptive_trial_time and not self.keyboard:
             self.read_log()
         self.log_written = 0
@@ -330,10 +331,10 @@ class GoalKeeper(PygameFeedback):
         if self.totalTrialTicks == self.nt:
             self.ballMoveRect = self.ball.get_rect(midbottom=(self.ballX, self.keeperSurface))
             if self.init_time != 0:
-                print 'Optimal trial time: ' + str(self.trialDuration)
-                print "Actual trial time: " + str(int((time.clock()-self.init_time)*1000)) + ' ms'
-                print "Ticks: " + str(self.nt)
-                print "*************************************"
+                print('Optimal trial time: ' + str(self.trialDuration))
+                print("Actual trial time: " + str(int((time.clock()-self.init_time)*1000)) + ' ms')
+                print("Ticks: " + str(self.nt))
+                print("*************************************")
                 self.init_time = 0
             if self.keeperMoveRect.left - self.ballX > self.tol or self.ballX - self.keeperMoveRect.right > self.tol:
                 if self.keeperPos == 'middle' or self.keeperPos == self.direction:
@@ -485,7 +486,7 @@ class GoalKeeper(PygameFeedback):
                 self.lastTrial = 'late'
                 self.hitMissFalse[1] += 1
 
-            print "Score: " + str(self.hitMissFalse[0]) + ":" + str(self.hitMissFalse[1]) + ":" + str(self.hitMissFalse[2])
+            print("Score: " + str(self.hitMissFalse[0]) + ":" + str(self.hitMissFalse[1]) + ":" + str(self.hitMissFalse[2]))
 
         self.hitMissElapsed += self.elapsed
 
@@ -683,7 +684,8 @@ class GoalKeeper(PygameFeedback):
         self.background.fill(self.backgroundColor)
 
         # init keeper
-        self.keeperSize = (self.screenSize[0] / 5, self.screenSize[0] / 30)
+        #self.keeperSize = (self.screenSize[0] / 5, self.screenSize[0] / 30)
+        self.keeperSize = (self.screenSize[0] // 5, self.screenSize[0] // 30)
         self.offsetGap = self.screenSize[0] / 4
         gap = (self.screenSize[0] - 3 * self.keeperSize[0] - 2 * self.offsetGap) / 4
         self.keeperY = int((6.0 / 7) * self.screenSize[1])

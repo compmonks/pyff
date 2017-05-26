@@ -22,7 +22,6 @@ import sys
 sys.path.append("../")
 from lib import bcixml
 
-
 LOCALHOST = "127.0.0.1"
 FC_PORT = 12345
 GUI_PORT = 12346

@@ -19,7 +19,6 @@
 import socket
 import logging
 import asyncore
-import asyncio
 import sys
 sys.path.append("../")
 from lib import bcinetwork
@@ -28,9 +27,6 @@ from FeedbackBase.Feedback import Feedback
 from lib.feedbackprocesscontroller import FeedbackProcessController
 import lib.ipc as ipc
 #
-#
-#mapDict = {}
-#loop = asyncio.get_event_loop()
 class FeedbackController(object):
     """Feedback Controller.
 
@@ -42,13 +38,11 @@ class FeedbackController(object):
         # Setup my stuff:
         self.logger = logging.getLogger("FeedbackController")
         #
-        #self.loop = asyncio.get_event_loop()
         # Set up the socket
         self.ipcchannel = ipc.IPCConnectionHandler(self)
         self.udpconnectionhandler = UDPDispatcher(self, protocol)
-        #self.udpconnectionhandler = UDPServer(self, protocol)
         # Windows only, set the parallel port port
-        #self.ppport = port
+        self.ppport = port
         fbdirs = ["Feedbacks"]#["/Users/pierrecutellic/git/pyff_py35/src/Feedbacks"]
         if fbpath:
             fbdirs.extend(fbpath)
@@ -61,9 +55,7 @@ class FeedbackController(object):
         """Start the Feedback Controller's activities."""
         self.logger.debug("Started mainloop.")
         ipc.ipcloop()
-        #asyncore.loop(timeout=60.0,map=mapDict)
-        #self.loop.run_until_complete(...)
-        print("IPC LOOP OK")
+        #print("IPC LOOP OK")
         self.logger.debug("Left mainloop.")
 
 
@@ -151,56 +143,10 @@ class FeedbackController(object):
         """
         self.udpconnectionhandler.send_signal(signal)
 
-      
-@asyncio.coroutine
-class UDPServer():
-    """ adpated from UDPDispatcher to adapt from asyncore to asyncio for python 3x porting"""
-    def __init__(self, fc, protocol):
-        self.fc = fc
-        if protocol == 'json':
-            self.decoder = bcixml.JsonDecoder()
-            self.encoder = bcixml.JsonEncoder()
-        elif protocol == 'tobixml':
-            # tobi and bcixml share the same encoder
-            self.decoder = bcixml.TobiXmlDecoder()
-            self.encoder = bcixml.XmlEncoder()
-        else:
-            self.decoder = bcixml.XmlDecoder()
-            self.encoder = bcixml.XmlEncoder()
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((bcinetwork.LOCALHOST, bcinetwork.FC_PORT))
-
-    def send_signal(self, signal):
-        """Send signal to the GUI."""
-        data = self.encoder.encode_packet(signal)
-        self.socket.sendto(data, (signal.peeraddr[0], bcinetwork.GUI_PORT))
-
-    def handle_connect(self): pass
-
-    def writable(self):
-        return False
-
-    def handle_read(self):
-        """Handle incoming signals.
-
-        Takes incoming signals, decodes them and forwards them to the
-        Feedback Controller.
-        """
-        try:
-            #data, address = self.recvfrom(bcinetwork.BUFFER_SIZE)
-            data = self.recv(bcinetwork.BUFFER_SIZE)
-            signal = self.decoder.decode_packet(data)
-            #signal.peeraddr = address
-            signal.peeraddr = (bcinetwork.LOCALHOST, bcinetwork.FC_PORT)
-            self.fc.handle_signal(signal)
-        except:
-            self.fc.logger.exception("Handling incoming signal caused an exception:")
-
 class UDPDispatcher(asyncore.dispatcher):
     """UDP Message Hanlder of the Feedback Controller."""
 
     def __init__(self, fc, protocol):
-        #asyncore.dispatcher.__init__(self)
         asyncore.dispatcher.__init__(self)
         #
         self.fc = fc
