@@ -26,6 +26,7 @@ import threading
 import datetime
 import sys
 #import cPickle as pickle
+import pickle
 from threading import Event, Timer
 import socket
 import json
@@ -111,9 +112,9 @@ class Feedback(object):
         self.udp_markers_host = '127.0.0.1'
         self.udp_markers_port = 12344
 
-        #self.tcp_markers_enable = False
-        #self.tcp_markers_host = '127.0.0.1'
-        #self.tcp_markers_port = 12344
+        self.tcp_markers_enable = False
+        self.tcp_markers_host = '127.0.0.1'
+        self.tcp_markers_port = 12344
 
         self._has_lsl = False
         try:

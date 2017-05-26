@@ -20,7 +20,7 @@
 import unittest
 from xml.dom import minidom, Node
 import sys
-
+sys.path.append("../../")
 from lib import bcixml
 
 

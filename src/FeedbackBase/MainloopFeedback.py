@@ -16,8 +16,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import sys
-sys.path.append("../FeedbackBase")# cannot find Feedback directly
-# from Feedback import Feedback
+#sys.path.append("../FeedbackBase/")# cannot find Feedback directly
+#from Feedback import Feedback
 from FeedbackBase.Feedback import Feedback
 
 

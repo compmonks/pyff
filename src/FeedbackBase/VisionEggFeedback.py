@@ -14,14 +14,16 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 """
-
+import sys
 import logging, time
 
-import VisionEgg
+
+sys.path.append("~/Git")
+import visionegg_35.VisionEgg as VisionEgg
 import pygame
-import sys
+
 sys.path.append("../FeedbackBase")# cannot find Feedback directly
-from FeedbackBase.MainloopFeedback import MainloopFeedback
+from MainloopFeedback import MainloopFeedback
 
 from lib import marker
 
@@ -183,7 +185,7 @@ class VisionEggFeedback(MainloopFeedback):
         try:
             self._view.acquire()
             self._update_parameters()
-        except pygame.error, e:
+        except pygame.error as e:
             self.logger.error(e)
 
     def on_interaction_event(self, data):

@@ -48,7 +48,7 @@ class RollbackImporter(object):
 
     def uninstall(self):
         """Unload all modules since __init__ and restore the original import."""
-        for module in sys.modules.keys():
+        for module in list(sys.modules.keys()):
             #if not self.oldmodules.has_key(module):
             if module not in self.oldmodules:
                 del sys.modules[module]

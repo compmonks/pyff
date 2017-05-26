@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # FeedbackController.py -
-# Copyright (C) 2007-2014  Bastian Venthur
+# Copyright (C) 2007-2014 Bastian Venthur
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,70 +31,68 @@ from lib.feedbackcontroller import FeedbackController
 
 
 def main():
-    """Start the Feedback Controller."""
+  """Start the Feedback Controller."""
 
-    # Get Options
-    description = """Feedback Controller"""
-    usage = "%prog [Options]"
-    version = """
-Copyright (C) 2007-2014 Bastian Venthur <bastian.venthur at tu-berlin de>
+  # Get Options
+  description = """Feedback Controller"""
+  usage = "%prog [Options]"
+  version = """
+  # Copyright (C) 2007-2014 Bastian Venthur <bastian.venthur at tu-berlin de>
+  # Homepage: http://bbci.de/pyff
+  # This program is free software; you can redistribute it and/or modify
+  # it under the terms of the GNU General Public License as published by
+  # the Free Software Foundation; either version 2 of the License, or
+  # (at your option) any later version.
+  # """
+  parser = OptionParser(usage=usage, version=version, description=description)
+  parser.add_option('-l', '--loglevel', type='choice',
+                       choices=['critical', 'error', 'warning', 'info', 'debug', 'notset'],
+                       dest='loglevel',
+                       help='Which loglevel to use for everything but the Feedbacks. Valid loglevels are: critical, error, warning, info, debug and notset. [default: warning]',
+                       metavar='LEVEL')
+  parser.add_option('--fb-loglevel', type='choice',
+                       choices=['critical', 'error', 'warning', 'info', 'debug', 'notset'],
+                       dest='fbloglevel',
+                       help='Which loglevel to use for the Feedbacks. Valid loglevels are: critical, error, warning, info, debug and notset. [default: warning]',
+                       metavar='LEVEL')
+  parser.add_option('--logserver', dest='logserver',
+                       action='store_true', default=False,
+                       help='Send log output to logserver.')
+  parser.add_option('-a', '--additional-feedback-path', dest='fbpath',
+                       action='append',
+                       help="Additional path to search for Feedbacks. Use this option several times if you want to add more than one path.",
+                       metavar="DIR")
+  parser.add_option('--port', dest='port',
+                       help="Set the Parallel port address to use. Windows only. Should be in Hex (eg: 0x378)",
+                       metavar="PORTNUM")
+  parser.add_option("--nogui", action="store_true", default=False,
+                       help="Start without GUI.")
+  parser.add_option("--protocol", dest='protocol', type='choice',
+                       help="Set the protocol to which Pyff listens to. Options are: json, bcixml and tobixml.",
+                         choices=['bcixml', 'json', 'tobixml'], default='bcixml')
 
-Homepage: http://bbci.de/pyff
+  options, args = parser.parse_args()
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-"""
-    parser = OptionParser(usage=usage, version=version, description=description)
-    parser.add_option('-l', '--loglevel', type='choice',
-                      choices=['critical', 'error', 'warning', 'info', 'debug', 'notset'],
-                      dest='loglevel',
-                      help='Which loglevel to use for everything but the Feedbacks. Valid loglevels are: critical, error, warning, info, debug and notset. [default: warning]',
-                      metavar='LEVEL')
-    parser.add_option('--fb-loglevel', type='choice',
-                      choices=['critical', 'error', 'warning', 'info', 'debug', 'notset'],
-                      dest='fbloglevel',
-                      help='Which loglevel to use for the Feedbacks. Valid loglevels are: critical, error, warning, info, debug and notset. [default: warning]',
-                      metavar='LEVEL')
-    parser.add_option('--logserver', dest='logserver',
-                      action='store_true', default=False,
-                      help='Send log output to logserver.')
-    parser.add_option('-a', '--additional-feedback-path', dest='fbpath',
-                      action='append',
-                      help="Additional path to search for Feedbacks. Use this option several times if you want to add more than one path.",
-                      metavar="DIR")
-    parser.add_option('--port', dest='port',
-                      help="Set the Parallel port address to use. Windows only. Should be in Hex (eg: 0x378)",
-                      metavar="PORTNUM")
-    parser.add_option("--nogui", action="store_true", default=False,
-                      help="Start without GUI.")
-    parser.add_option("--protocol", dest='protocol', type='choice',
-                      help="Set the protocol to which Pyff listens to. Options are: json, bcixml and tobixml.",
-                        choices=['bcixml', 'json', 'tobixml'], default='bcixml')
+  # Initialize logging
+  str2loglevel = {'critical' : logging.CRITICAL,
+                     'error'  : logging.ERROR,
+                     'warning' : logging.WARNING,
+                     'info'     : logging.INFO,
+                     'debug'  : logging.DEBUG,
+                     'notset'   : logging.NOTSET}
 
-    options, args = parser.parse_args()
+  loglevel = str2loglevel.get(options.loglevel, logging.WARNING)
+  fbloglevel = str2loglevel.get(options.fbloglevel, logging.WARNING)
 
-    # Initialize logging
-    str2loglevel = {'critical' : logging.CRITICAL,
-                    'error'    : logging.ERROR,
-                    'warning'  : logging.WARNING,
-                    'info'     : logging.INFO,
-                    'debug'    : logging.DEBUG,
-                    'notset'   : logging.NOTSET}
-
-    loglevel = str2loglevel.get(options.loglevel, logging.WARNING)
-    fbloglevel = str2loglevel.get(options.fbloglevel, logging.WARNING)
-
-    if options.logserver:
-        rootLogger = logging.getLogger('')
-        socketHandler = logging.handlers.SocketHandler('localhost',
-                                                       logging.handlers.DEFAULT_TCP_LOGGING_PORT)
-        rootLogger.addHandler(socketHandler)
-        formatter = logging.Formatter('[%(process)-5d:%(threadName)-10s] %(name)-25s: %(levelname)-8s %(message)s')
-        socketHandler.setFormatter(formatter)
-    else:
-        logging.basicConfig(level=loglevel, format='[%(process)-5d:%(threadName)-10s] %(name)-25s: %(levelname)-8s %(message)s')
+  if options.logserver:
+    rootLogger = logging.getLogger('')
+    socketHandler = logging.handlers.SocketHandler('localhost',
+                                                        logging.handlers.DEFAULT_TCP_LOGGING_PORT)
+    rootLogger.addHandler(socketHandler)
+    formatter = logging.Formatter('[%(process)-5d:%(threadName)-10s] %(name)-25s: %(levelname)-8s %(message)s')
+    socketHandler.setFormatter(formatter)
+  else:
+    logging.basicConfig(level=loglevel, format='[%(process)-5d:%(threadName)-10s] %(name)-25s: %(levelname)-8s %(message)s')
     logging.info('Logger initialized with level %s.' % options.loglevel)
     logging.getLogger("FB").setLevel(fbloglevel)
 
@@ -102,19 +100,27 @@ the Free Software Foundation; either version 2 of the License, or
     fbpath = options.fbpath
     guiproc = None
     if not options.nogui:
+        #guiproc = Process(target=GUI.main, args=(options.protocol,))
         guiproc = Process(target=GUI.main, args=(options.protocol,))
         guiproc.start()
-
+        print("GUI OK")
     port = None
     if options.port != None:
         port = int(options.port, 16)
     try:
+        print("FBPATH: %s"%(fbpath))
+        print("PORT: %s"%(port))
+        print("PROTOCOL: %s"%(options.protocol))
+        
         fc = FeedbackController(fbpath, port, options.protocol)
+        print("FC OK")
     except:
         logging.exception("Could not start Feedback Controller, is another instance already running?")
         return
+    ###### CURRENT ISSUE START HERE #####
     try:
         fc.start()
+        print("START OK")
     except (KeyboardInterrupt, SystemExit):
         logging.debug("Caught keyboard interrupt or system exit; quitting")
     except:
@@ -134,5 +140,5 @@ the Free Software Foundation; either version 2 of the License, or
 
 
 if __name__ == '__main__':
-    main()
-
+  #print("OK")
+  main()

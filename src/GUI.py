@@ -24,13 +24,14 @@ import sys
 import time
 
 #sys.path.append("../../")# ease the access of PyQt4
-sys.path.append("gui/")# ease the access of gui icons
+sys.path.append("../src/gui/")# ease the access of gui icons
 #from PyQt4 import QtCore, QtGui 
 from PyQt5 import QtCore, QtGui, QtWidgets
 #from pyqt5 import QtCore, QtGui 
 
 
 from gui.gui import Ui_MainWindow
+#from gui import Ui_MainWindow
 
 from lib import bcinetwork
 from lib import bcixml
@@ -137,7 +138,7 @@ class BciGui(QtWidgets.QMainWindow, Ui_MainWindow):
     def get(self):
         d = self.fc.get_variables()
         entries = []
-        for name, value in d.iteritems():
+        for name, value in list(d.items()):
             e = Entry(name, value)
             entries.append(e)
         # FIXME: this will clear the whole table and just put in the new
@@ -151,7 +152,7 @@ class BciGui(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fc.send_init(feedback)
         d = self.fc.get_variables()
         entries = []
-        for name, value in d.iteritems():
+        for name, value in list(d.items()):
             e = Entry(name, value)
             entries.append(e)
         self.model.setElements(entries)
@@ -180,14 +181,19 @@ class BciGui(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     def open(self):
-        filename = QtGui.QFileDialog.getOpenFileName(filter = "Configuration Files (*.json)")
+        #filename = QtGui.QFileDialog.getOpenFileName(filter = "Configuration Files (*.json)")
+        filename = QtWidgets.QFileDialog.getOpenFileName(filter = "Configuration Files (*.json)")
         #filename = unicode(filename)
         filename = str(filename)
-        self.fc.load_configuration(filename)
+        try:
+            self.fc.load_configuration(filename)
+        except:
+            print("No json confuguration file found")
 
 
     def save(self):
-        filename = QtGui.QFileDialog.getSaveFileName(filter = "Configuration Files (*.json)")
+        #filename = QtGui.QFileDialog.getSaveFileName(filter = "Configuration Files (*.json)")
+        filename = QtWidgets.QFileDialog.getSaveFileName(filter = "Configuration Files (*.json)")
         #filename = unicode(filename)
         filename = str(filename)
         self.fc.save_configuration(filename)
@@ -205,7 +211,9 @@ class BciGui(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
     def getFeedbackControllerAddress(self):
-        text, ok = QtGui.QInputDialog.getText(self, "Add Feedback Controller", "Please enter the address[:port] of the Feedback Controller.\n\nThe adress can be a hostname or numeric, the port is optional.")
+        #text, ok = QtGui.QInputDialog.getText(self, "Add Feedback Controller", "Please enter the address[:port] of the Feedback Controller.\n\nThe adress can be a hostname or numeric, the port is optional.")
+        text, ok = QtWidgets.QInputDialog.getText(self, "Add Feedback Controller", "Please enter the address[:port] of the Feedback Controller.\n\nThe adress can be a hostname or numeric, the port is optional.")
+
         if not ok:
             raise Exception
 

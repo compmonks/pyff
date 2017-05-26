@@ -19,7 +19,8 @@
 import unittest
 import socket
 import time
-
+import sys
+sys.path.append("../../")
 from lib.eyetracker import EyeTracker
 
 

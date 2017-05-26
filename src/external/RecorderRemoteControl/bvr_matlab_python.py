@@ -11,16 +11,16 @@ if (len(sys.argv) > 1):
             stopViewing()
             loadWorkspace(sys.argv[2])
         else:
-            print 'Couldn''t load workspace: not enough arguments'
-            print 'You have to specify a filename.'
+            print('Couldn''t load workspace: not enough arguments')
+            print('You have to specify a filename.')
             sys.exit(1)
     elif(fcn == 'startrecording'):
         if(len(sys.argv) > 2):
             viewData()
             startRecording(sys.argv[2])
         else:
-            print 'Couldn''t start Recording: not enough arguments'
-            print 'You have to specify a filename.'
+            print('Couldn''t start Recording: not enough arguments')
+            print('You have to specify a filename.')
             sys.exit(1)
     elif(fcn == 'startimprecording'):
         if(len(sys.argv) > 2):
@@ -29,8 +29,8 @@ if (len(sys.argv) > 1):
             viewData()
             startRecording(sys.argv[2])
         else:
-            print 'Couldn''t start impedance recording: not enough arguments'
-            print 'You have to specify a filename.'
+            print('Couldn''t start impedance recording: not enough arguments')
+            print('You have to specify a filename.')
             sys.exit(1)
 
     elif(fcn == 'stoprecording'):
@@ -52,10 +52,10 @@ if (len(sys.argv) > 1):
     elif(fcn == 'resumerecording'):
         continueRecording()
     elif(fcn == 'getstate'):
-        print getState()
+        print(getState())
     else:
-        print 'Warning: The command ' + fcn + ' is not supported'
+        print('Warning: The command ' + fcn + ' is not supported')
         sys.exit(1)
 else:
-    print 'No command specified'
+    print('No command specified')
     sys.exit(1)

@@ -20,11 +20,12 @@ from threading import Thread
 import logging
 import asyncore
 from multiprocessing import Process, Event
-
+import sys
+sys.path.append("../")
 from lib.PluginController import PluginController
 import lib.PluginController
 import lib.ipc as ipc
-
+from imp import reload
 
 class FeedbackProcess(Process):
     """Process that wrapps the Feedback's activities."""

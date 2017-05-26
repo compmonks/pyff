@@ -23,9 +23,11 @@ import sys
 sys.path.append("../")
 from xml.dom import minidom, Node
 import json
-
+import requests
 from lib import pylibtobiic
+import codecs
 
+reader = codecs.getreader("utf-8")
 
 XML_ROOT = "bci-signal"
 VERSION = "version"
@@ -410,7 +412,7 @@ class JsonDecoder(object):
     def decode_packet(self, signal):
         """Decode JSON strings into a `BciSignal` object.
 
-        Paramters
+        Parameters
         ---------
         signal : str
             a string formatted as valid JSON
@@ -427,6 +429,7 @@ class JsonDecoder(object):
         """
         try:
             signaldict = json.loads(signal)
+            #signaldict = json.loads(signal.decode("utf-8"))
         except ValueError:
             self.logger.error('Unable to parse JSON:')
             self.logger.error(signal)
@@ -466,7 +469,8 @@ class JsonEncoder(object):
 
         """
         d2 = dict()
-        for k, v in bcisignal.data.iteritems():
+        #for k, v in bcisignal.data.iteritems():
+        for k, v in list(bcisignal.data.items()):
             try:
                 json.dumps((k, v))
             except:

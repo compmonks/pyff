@@ -34,10 +34,11 @@ does not have any effect. You can change the object, though, by changing
 its features manually and calling refresh. 
   
 """
-    
+import sys
+sys.path.append("../../lib/")
 import pygame
-
-from VisualElement import VisualElement
+#from VisualElement import VisualElement
+from P300VisualElement.VisualElement import VisualElement
 
 
 class Textbox(VisualElement):

@@ -21,7 +21,7 @@ import os
 
 import pygame
 import sys
-sys.path.append("../FeedbackBase")# cannot find Feedback directly
+#sys.path.append("../FeedbackBase/")# cannot find Feedback directly
 from FeedbackBase.MainloopFeedback import MainloopFeedback
 #from MainloopFeedback import MainloopFeedback
 

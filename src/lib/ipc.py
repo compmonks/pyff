@@ -24,12 +24,15 @@ between the Feedback Controller and the Feedbacks
 
 
 import asyncore
+import asyncio
 import asynchat
 import socket
+import time
 #import cPickle as pickle
 import pickle
 import logging
-
+import sys
+sys.path.append("../")
 import lib.bcixml as bcixml
 
 
@@ -43,8 +46,11 @@ import _thread
 
 def ipcloop():
     """Start the IPC loop."""
-    asyncore.loop()
-
+    print("TRYING")
+    #print(theMap)
+    #asyncore.loop(map=theMap)
+    asyncore.loop(timeout=60.0)
+    #asyncore.loop(timeout=10,use_poll=hasattr(asyncore.select, 'poll'),map=theMap, count=1)
 
 def get_feedbackcontroller_connection():
     """Return a connection to the Feedback Controller."""
@@ -66,10 +72,23 @@ class IPCConnectionHandler(asyncore.dispatcher):
         self.ipcchan = None
         self.fc = fc
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        #self.socket.socket(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         #self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.set_reuse_addr()
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        #self.set_reuse_addr()
         self.bind((LOCALHOST, IPC_PORT))
         self.listen(5)
+
+        #@asyncio.coroutine
+        async def __init__(self,fc):
+            self.conn = None
+            self.addr = None
+            self.ipcchan = None
+            self.fc = fc
+            self.sock = socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.sock.bind((LOCALHOST, IPC_PORT))
+            self.sock.listen(5)
 
     def handle_accept(self):
         """Handle incoming connection from Feedback."""

@@ -5,7 +5,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-#
+#print("FC OK")
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,7 +24,7 @@ import sys,os,random
 import pygame
 import sys
 sys.path.append("../FeedbackBase")# cannot find Feedback directly
-from FeedbackBase.Feedback import Feedback
+from Feedback import Feedback
 from MainloopFeedback import MainloopFeedback
 from lib.P300VisualElement.Textbox import Textbox
 from lib.P300Aux.P300Functions import wait_for_key,show_message

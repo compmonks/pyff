@@ -55,19 +55,19 @@ PAUSE_START, PAUSE_END = 248, 249
 
 if __name__ == '__main__':
     _tmp = list()
-    for name, value in globals().items():
+    for name, value in list(globals().items()):
         # ignore magic variables
         if name.startswith('__') and name.endswith('__'):
-            print "Ignoring magic %s" % name
+            print("Ignoring magic %s" % name)
             continue
         if name == '_tmp':
             continue
         if not isinstance(value, int):
-            print "Ignoring non-int %s (%s)" % (name, str(value))
+            print("Ignoring non-int %s (%s)" % (name, str(value)))
         _tmp.append([value, name])
     _tmp.sort()
     for i in range(1, len(_tmp)):
         if _tmp[i][0] == _tmp[i-1][0]:
-            print "Found duplicate triggers (%i) %s and %s" % (_tmp[i][0],
-                    _tmp[i-1][1], _tmp[i][1])
+            print ("Found duplicate triggers (%i) %s and %s" % (_tmp[i][0],
+                    _tmp[i-1][1], _tmp[i][1]))
 

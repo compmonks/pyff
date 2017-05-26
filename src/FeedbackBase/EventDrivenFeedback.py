@@ -19,7 +19,7 @@
 import time
 import sys
 sys.path.append("../FeedbackBase")# cannot find Feedback directly
-from FeedbackBase.Feedback import Feedback
+from Feedback import Feedback
 #from Feedback import Feedback
 
 

@@ -18,7 +18,8 @@
 
 import logging
 import socket
-
+import sys
+sys.path.append("../")
 from lib import bcixml
 
 
