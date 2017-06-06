@@ -98,7 +98,7 @@ def main():
 
     # get the rest
     fbpath = options.fbpath
-    guiproc = None$
+    guiproc = None
     if not options.nogui:
         guiproc = Process(target=GUI.main, args=(options.protocol,))
         guiproc.start()
